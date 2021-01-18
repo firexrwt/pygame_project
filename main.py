@@ -1,4 +1,5 @@
 def main():
-    print('main')
-def check():
-    print(1)
+    print('Проверка, проверка. Раз, два, три!')
+
+if __name__ == '__main__':
+    main()
