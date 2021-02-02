@@ -1,10 +1,13 @@
 import pygame
 
-size = (500, 500)
+size = (1000, 500)
 sky_col = (200, 220, 255)
 running = True
 gravity = 1
-walkingX = False
+d = 0
+stopping = 1
+goingL = False
+goingR = False
 
 
 class Board:
@@ -12,28 +15,29 @@ class Board:
         self.mapList = []
         self.texture_list = []
         self.bList = []
-        self.char_loc = ()
         self.row = row
         self.col = col
+        self.char_loc = ()
         self.charxy = (0, 0)
-        for i in range(self.col):
+        for i in range(self.row):
             bListj = []
-            for j in range(self.row):
+            for j in range(self.col):
                 bListj.append(((j * 50, i * 50), ((j + 1) * 50, 50 * (i + 1)), '.'))  # x0,y0;x,y;block
             self.bList.append(bListj)
 
     def sort_map_text(self, fileName):
         mapFile = [elem for num, elem in enumerate(open(fileName, 'r'))]
+
         for i in range(self.row):
             line = mapFile[i].rstrip('\n')
             self.mapList.append(line)
         maxlen = max(map(lambda x: len(x), self.mapList))
-        for elem in self.mapList:
-            elem.rjust(maxlen, '.')
-        map(lambda x: [x[i] for i in range(len(x))], self.mapList)
+        print(maxlen)
+        list(map(lambda x: [x[i] for i in range(len(x))], self.mapList))
 
         for i in range(self.row):
             for j in range(self.col):
+                print(j)
                 q = self.bList[i][j]
                 self.bList[i][j] = (q[0], q[1], self.mapList[i][j])
 
@@ -67,8 +71,28 @@ class GroundChkr(pygame.sprite.Sprite):
     gcheck = pygame.image.load('Data/groundChkr.png')
 
     def __init__(self):
-        #  super().__init__(Char_Sprite)
+        super().__init__(Collide_Sprite)
         self.image = GroundChkr.gcheck
+        self.rect = self.image.get_rect()
+
+
+class Camera:
+    def __init__(self):
+        self.dx = 0
+
+    def apply(self, obj):
+        obj.rect.x += self.dx
+
+    def update(self, target):
+        self.dx = target.rect.x
+
+
+class SideChkr(pygame.sprite.Sprite):
+    scheck = pygame.image.load('Data/sideChkr.png')
+
+    def __init__(self):
+        super().__init__(Collide_Sprite)
+        self.image = SideChkr.scheck
         self.rect = self.image.get_rect()
 
 
@@ -77,6 +101,7 @@ class Mario(pygame.sprite.Sprite):
 
     def __init__(self, board):
         super().__init__(Char_Sprite)
+        self.jcounter = 2
         self.image = Mario.mario
         self.rect = self.image.get_rect()
         self.xvelocity = 0
@@ -84,21 +109,50 @@ class Mario(pygame.sprite.Sprite):
         self.grounded = False
         self.board = board
         self.gcheck = GroundChkr()
+        self.lcheck, self.rcheck = SideChkr(), SideChkr()
         self.rect.x, self.rect.y = board.charxy
+        self.d = 0
 
     def updater(self):
+        global goingL
+        global goingR
+        global walkingX
+
+        if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.gcheck,
+                                                                                                   Ground_Sprites):
+            self.rect.y -= 1
+
+        self.d += 1
         Char_Sprite.draw(screen)
+
+        self.lcheck.rect.x = self.rect.x - 2
+        self.lcheck.rect.y = self.rect.y + 10
+        self.rcheck.rect.x = self.rect.x + 26
+        self.rcheck.rect.y = self.rect.y + 10
         self.gcheck.rect.x = self.rect.x
-        self.gcheck.rect.y = self.rect.y + 47
+        self.gcheck.rect.y = self.rect.y + 43
+
         if pygame.sprite.spritecollideany(self.gcheck, Ground_Sprites):
             self.grounded = True
+        else:
+            self.grounded = False
+        if pygame.sprite.spritecollideany(self.lcheck, Ground_Sprites):
+            goingL = False
+        elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
+            goingR = False
 
         if self.grounded:
+            self.jcounter = 1
             self.yvelocity = 0
         else:
-            self.yvelocity -= gravity
+            if self.d % 4 == 1:
+                self.yvelocity -= gravity
+        if goingR:
+            self.move('r')
+        elif goingL:
+            self.move('l')
 
-        if walkingX:
+        if goingR or goingL:
             self.rect.x += self.xvelocity
         self.rect.y -= self.yvelocity
 
@@ -108,39 +162,52 @@ class Mario(pygame.sprite.Sprite):
         if direction == 'l':
             self.xvelocity = -2
 
+    def jump(self):
+        self.rect.y -= 10
+        if self.grounded:
+            self.yvelocity = 6
+        else:
+            if self.jcounter:
+                self.yvelocity = 5
+            self.jcounter -= 1
+
 
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption('Марио в Коробках')
+    pygame.display.set_caption('Марио')
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
 
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
+    Collide_Sprite = pygame.sprite.Group()
     UPDATER = pygame.USEREVENT + 1
     pygame.time.set_timer(UPDATER, 10)
-    board = Board(10, 10)
+    board = Board(10, 20)
     board.sort_map_text('Data/map1.txt')
     board.render_map()
+    camera = Camera()
     mario = Mario(board)
 
     while running:
+        keys = pygame.key.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
+                walkingX = True
+                goingL = event.key == pygame.K_LEFT
+                goingR = event.key == pygame.K_RIGHT
                 if event.key == pygame.K_UP:
                     mario.jump()
-                if event.key == pygame.K_LEFT:
-                    walkingX = True
-                    mario.move('l')
-                if event.key == pygame.K_RIGHT:
-                    walkingX = True
-                    mario.move('r')
+
             elif event.type == pygame.KEYUP:
-                walkingX = False
+                goingR, goingL = False, False
             if event.type == UPDATER:
                 mario.updater()
+                #camera.update(mario)
+                for spr in Ground_Sprites:
+                    camera.apply(spr)
 
         screen.fill(sky_col)
         Ground_Sprites.draw(screen)
