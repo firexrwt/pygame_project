@@ -8,6 +8,7 @@ d = 0
 stopping = 1
 goingL = False
 goingR = False
+walkingX = False
 
 
 class Board:
@@ -32,12 +33,10 @@ class Board:
             line = mapFile[i].rstrip('\n')
             self.mapList.append(line)
         maxlen = max(map(lambda x: len(x), self.mapList))
-        print(maxlen)
         list(map(lambda x: [x[i] for i in range(len(x))], self.mapList))
 
         for i in range(self.row):
             for j in range(self.col):
-                print(j)
                 q = self.bList[i][j]
                 self.bList[i][j] = (q[0], q[1], self.mapList[i][j])
 
@@ -81,10 +80,11 @@ class Camera:
         self.dx = 0
 
     def apply(self, obj):
-        obj.rect.x += self.dx
+        if walkingX:
+            obj.rect.x -= self.dx
 
     def update(self, target):
-        self.dx = target.rect.x
+        self.dx = target.xvelocity // 2
 
 
 class SideChkr(pygame.sprite.Sprite):
@@ -101,7 +101,7 @@ class Mario(pygame.sprite.Sprite):
 
     def __init__(self, board):
         super().__init__(Char_Sprite)
-        self.jcounter = 2
+        self.jcounter = 1
         self.image = Mario.mario
         self.rect = self.image.get_rect()
         self.xvelocity = 0
@@ -121,6 +121,12 @@ class Mario(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.gcheck,
                                                                                                    Ground_Sprites):
             self.rect.y -= 1
+        if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.lcheck,
+                                                                                                   Ground_Sprites):
+            self.rect.x += 1
+        if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.rcheck,
+                                                                                                   Ground_Sprites):
+            self.rect.x -= 1
 
         self.d += 1
         Char_Sprite.draw(screen)
@@ -138,11 +144,13 @@ class Mario(pygame.sprite.Sprite):
             self.grounded = False
         if pygame.sprite.spritecollideany(self.lcheck, Ground_Sprites):
             goingL = False
+            self.xvelocity = 0
         elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
             goingR = False
-
+            self.xvelocity = 0
         if self.grounded:
             self.jcounter = 1
+
             self.yvelocity = 0
         else:
             if self.d % 4 == 1:
@@ -169,7 +177,7 @@ class Mario(pygame.sprite.Sprite):
         if self.grounded:
             self.yvelocity = 6
         else:
-            if self.jcounter:
+            if self.jcounter > 0:
                 self.yvelocity = 5
             self.jcounter -= 1
 
@@ -213,7 +221,7 @@ if __name__ == '__main__':
             goingR = True
         else:
             goingR = False
-
+        walkingX = goingL or goingR
         screen.fill(sky_col)
         Ground_Sprites.draw(screen)
         Char_Sprite.draw(screen)
