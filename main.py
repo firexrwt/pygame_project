@@ -154,7 +154,9 @@ class Mario(pygame.sprite.Sprite):
 
         if goingR or goingL:
             self.rect.x += self.xvelocity
-        self.rect.y -= self.yvelocity
+            self.rect.y -= self.yvelocity
+        else:
+            self.rect.y -= self.yvelocity
 
     def move(self, direction):
         if direction == 'r':
@@ -196,18 +198,21 @@ if __name__ == '__main__':
                 running = False
             if event.type == pygame.KEYDOWN:
                 walkingX = True
-                goingL = event.key == pygame.K_LEFT
-                goingR = event.key == pygame.K_RIGHT
                 if event.key == pygame.K_UP:
                     mario.jump()
-
-            elif event.type == pygame.KEYUP:
-                goingR, goingL = False, False
             if event.type == UPDATER:
                 mario.updater()
-                #camera.update(mario)
+                camera.update(mario)
                 for spr in Ground_Sprites:
                     camera.apply(spr)
+        if keys[pygame.K_LEFT]:
+            goingL = True
+        else:
+            goingL = False
+        if keys[pygame.K_RIGHT]:
+            goingR = True
+        else:
+            goingR = False
 
         screen.fill(sky_col)
         Ground_Sprites.draw(screen)
