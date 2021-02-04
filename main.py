@@ -1,7 +1,7 @@
 import pygame
 
-window_size = (1000, 500)
-sky_color = (200, 220, 255)
+size = (1000, 500)
+sky_col = (200, 220, 255)
 running = True
 gravity = 1
 d = 0
@@ -20,6 +20,7 @@ class Board:
         self.col = col
         self.char_loc = ()
         self.charxy = (0, 0)
+        self.camera_checkpoint = 300
         for i in range(self.row):
             bListj = []
             for j in range(self.col):
@@ -83,9 +84,10 @@ class Camera:
     def apply(self, obj):
         if walkingX:
             obj.rect.x -= self.dx
+            board.camera_checkpoint -= self.dx
 
     def update(self, target):
-        if target.rect.x > 70:
+        if target.camera_lock:
             self.dx = target.xvelocity
         else:
             self.dx = 0
@@ -105,6 +107,7 @@ class Mario(pygame.sprite.Sprite):
 
     def __init__(self, board):
         super().__init__(Char_Sprite)
+        self.camera_lock = False
         self.jcounter = 1
         self.image = Mario.mario
         self.rect = self.image.get_rect()
@@ -165,16 +168,22 @@ class Mario(pygame.sprite.Sprite):
             self.move('l')
 
         if goingR or goingL:
-            self.rect.x += self.xvelocity
+            if not self.camera_lock:
+                self.rect.x += self.xvelocity
             self.rect.y -= self.yvelocity
         else:
             self.rect.y -= self.yvelocity
 
+        if self.rect.x >= board.camera_checkpoint:
+            self.camera_lock = True
+        else:
+            self.camera_lock = False
+
     def move(self, direction):
         if direction == 'r':
-            self.xvelocity = 2
+            self.xvelocity = 4
         if direction == 'l':
-            self.xvelocity = -2
+            self.xvelocity = -4
 
     def jump(self):
         self.rect.y -= 10
@@ -189,15 +198,15 @@ class Mario(pygame.sprite.Sprite):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Марио')
-    screen = pygame.display.set_mode(window_size)
-    screen.fill(sky_color)
+    screen = pygame.display.set_mode(size)
+    screen.fill(sky_col)
 
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
     Collide_Sprite = pygame.sprite.Group()
     UPDATER = pygame.USEREVENT + 1
     pygame.time.set_timer(UPDATER, 10)
-    board = Board(10, 20)
+    board = Board(10, 60)
     board.sort_map_text('Data/map1.txt')
     board.render_map()
     camera = Camera()
@@ -226,9 +235,7 @@ if __name__ == '__main__':
         else:
             goingR = False
         walkingX = goingL or goingR
-        screen.fill(sky_color)
-        timer = pygame.time.Clock()
-        timer.tick(60)
+        screen.fill(sky_col)
         Ground_Sprites.draw(screen)
         Char_Sprite.draw(screen)
         pygame.display.flip()
