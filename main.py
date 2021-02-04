@@ -78,13 +78,17 @@ class GroundChkr(pygame.sprite.Sprite):
 class Camera:
     def __init__(self):
         self.dx = 0
+        self.dy = 0
 
     def apply(self, obj):
         if walkingX:
             obj.rect.x -= self.dx
 
     def update(self, target):
-        self.dx = target.xvelocity // 2
+        if target.rect.x > 70:
+            self.dx = target.xvelocity
+        else:
+            self.dx = 0
 
 
 class SideChkr(pygame.sprite.Sprite):
