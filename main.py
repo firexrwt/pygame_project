@@ -1,7 +1,7 @@
 import pygame
 
-size = (1000, 500)
-sky_col = (200, 220, 255)
+window_size = (1000, 500)
+sky_color = (200, 220, 255)
 running = True
 gravity = 1
 d = 0
@@ -189,8 +189,8 @@ class Mario(pygame.sprite.Sprite):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Марио')
-    screen = pygame.display.set_mode(size)
-    screen.fill(sky_col)
+    screen = pygame.display.set_mode(window_size)
+    screen.fill(sky_color)
 
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
@@ -226,7 +226,9 @@ if __name__ == '__main__':
         else:
             goingR = False
         walkingX = goingL or goingR
-        screen.fill(sky_col)
+        screen.fill(sky_color)
+        timer = pygame.time.Clock()
+        timer.tick(60)
         Ground_Sprites.draw(screen)
         Char_Sprite.draw(screen)
         pygame.display.flip()
