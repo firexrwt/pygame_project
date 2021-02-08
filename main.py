@@ -21,10 +21,11 @@ class Board:
         self.char_loc = ()
         self.charxy = (0, 0)
         self.camera_checkpoint = 300
+        self.end_camera_cp = 2201
         for i in range(self.row):
             bListj = []
             for j in range(self.col):
-                bListj.append(((j * 50, i * 50), ((j + 1) * 50, 50 * (i + 1)), '.'))  # x0,y0;x,y;block
+                bListj.append((((j - 1) * 50, i * 50), (j * 50, 50 * (i + 1)), '.'))  # x0,y0;x,y;block
             self.bList.append(bListj)
 
     def sort_map_text(self, fileName):
@@ -47,59 +48,34 @@ class Board:
             for j in range(self.col):
                 elem = self.bList[i][j]
                 if elem[2] == '#':
-                    box = Grass()
-                    box.rect.x, box.rect.y = elem[0]
-                    tl1.append(box)
+                    grass = Grass()
+                    grass.rect.x, grass.rect.y = elem[0]
+                    tl1.append(grass)
                 if elem[2] == '@':
                     self.char_loc = (i, j)
                     self.charxy = (self.bList[i][j][0][0] + 15, self.bList[i][j][0][1] + 5)
-
+                if elem[2] == '_':
+                    platform = Platform()
+                    platform.rect.x, platform.rect.y = elem[0]
+                    tl1.append(platform)
+                if elem[2] == '^':
+                    spike = Spike()
+                    spike.rect.x, spike.rect.y = elem[0][0], elem[0][1] + 30
+                    tl1.append(spike)
+                if elem[2] == '<':
+                    spike = Spike('right')
+                    spike.rect.x, spike.rect.y = elem[0][0] + 30, elem[0][1]
+                    tl1.append(spike)
+                if elem[2] == '>':
+                    spike = Spike('left')
+                    spike.rect.x, spike.rect.y = elem[0]
+                    tl1.append(spike)
+                if elem[2] == 'V':
+                    spike = Spike('top')
+                    spike.rect.x, spike.rect.y = elem[0]
+                    tl1.append(spike)
             self.texture_list.append(tl1)
         Ground_Sprites.draw(screen)
-
-
-class Grass(pygame.sprite.Sprite):
-    grass = pygame.image.load('Data/grass.png')
-
-    def __init__(self):
-        super().__init__(Ground_Sprites)
-        self.image = Grass.grass
-        self.rect = self.image.get_rect()
-
-
-class GroundChkr(pygame.sprite.Sprite):
-    gcheck = pygame.image.load('Data/groundChkr.png')
-
-    def __init__(self):
-        super().__init__(Collide_Sprite)
-        self.image = GroundChkr.gcheck
-        self.rect = self.image.get_rect()
-
-
-class Camera:
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-
-    def apply(self, obj):
-        if walkingX:
-            obj.rect.x -= self.dx
-            board.camera_checkpoint -= self.dx
-
-    def update(self, target):
-        if target.camera_lock:
-            self.dx = target.xvelocity
-        else:
-            self.dx = 0
-
-
-class SideChkr(pygame.sprite.Sprite):
-    scheck = pygame.image.load('Data/sideChkr.png')
-
-    def __init__(self):
-        super().__init__(Collide_Sprite)
-        self.image = SideChkr.scheck
-        self.rect = self.image.get_rect()
 
 
 class Mario(pygame.sprite.Sprite):
@@ -119,6 +95,7 @@ class Mario(pygame.sprite.Sprite):
         self.lcheck, self.rcheck = SideChkr(), SideChkr()
         self.rect.x, self.rect.y = board.charxy
         self.d = 0
+        self.dead = False
 
     def updater(self):
         global goingL
@@ -155,12 +132,19 @@ class Mario(pygame.sprite.Sprite):
         elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
             goingR = False
             self.xvelocity = 0
+
+        if pygame.sprite.spritecollideany(self.gcheck, Threat_Sprite):
+            self.dead = True
+        if pygame.sprite.spritecollideany(self.lcheck, Threat_Sprite):
+            self.dead = True
+        elif pygame.sprite.spritecollideany(self.rcheck, Threat_Sprite):
+            self.dead = True
+
         if self.grounded:
             self.jcounter = 1
-
             self.yvelocity = 0
         else:
-            if self.d % 4 == 1:
+            if self.d % 5 == 1:
                 self.yvelocity -= gravity
         if goingR:
             self.move('r')
@@ -170,14 +154,19 @@ class Mario(pygame.sprite.Sprite):
         if goingR or goingL:
             if not self.camera_lock:
                 self.rect.x += self.xvelocity
+            board.camera_checkpoint -= self.xvelocity
+            board.end_camera_cp -= self.xvelocity
             self.rect.y -= self.yvelocity
         else:
             self.rect.y -= self.yvelocity
 
-        if self.rect.x >= board.camera_checkpoint:
+        if (board.end_camera_cp >= self.rect.x) and (self.rect.x >= board.camera_checkpoint):
             self.camera_lock = True
         else:
             self.camera_lock = False
+
+        if self.rect.y > board.row * 50:
+            self.dead = True
 
     def move(self, direction):
         if direction == 'r':
@@ -188,11 +177,80 @@ class Mario(pygame.sprite.Sprite):
     def jump(self):
         self.rect.y -= 10
         if self.grounded:
-            self.yvelocity = 6
+            self.yvelocity = 7
         else:
             if self.jcounter > 0:
                 self.yvelocity = 5
             self.jcounter -= 1
+
+
+class Grass(pygame.sprite.Sprite):
+    grass = pygame.image.load('Data/grass.png')
+
+    def __init__(self):
+        super().__init__(Ground_Sprites)
+        self.image = Grass.grass
+        self.rect = self.image.get_rect()
+
+
+class Platform(pygame.sprite.Sprite):
+    platform = pygame.image.load('Data/platform.png')
+
+    def __init__(self):
+        super().__init__(Ground_Sprites)
+        self.image = Platform.platform
+        self.rect = self.image.get_rect()
+
+
+class GroundChkr(pygame.sprite.Sprite):
+    gcheck = pygame.image.load('Data/groundChkr.png')
+
+    def __init__(self):
+        super().__init__(Collide_Sprite)
+        self.image = GroundChkr.gcheck
+        self.rect = self.image.get_rect()
+
+
+class Spike(pygame.sprite.Sprite):
+    spike = pygame.image.load('Data/spikes.png')
+
+    def __init__(self, l='bottom'):
+        super().__init__(Threat_Sprite)
+        self.image = Spike.spike
+        if l == 'right':
+            self.image = pygame.transform.rotate(self.image, 90)
+        elif l == 'left':
+            self.image = pygame.transform.rotate(self.image, 270)
+        elif l == 'top':
+            self.image = pygame.transform.rotate(self.image, 180)
+        elif l == 'bottom':
+            pass
+        self.rect = self.image.get_rect()
+
+
+class Camera:
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    def apply(self, obj):
+        if walkingX:
+            obj.rect.x -= self.dx
+
+    def update(self, target):
+        if target.camera_lock:
+            self.dx = target.xvelocity
+        else:
+            self.dx = 0
+
+
+class SideChkr(pygame.sprite.Sprite):
+    scheck = pygame.image.load('Data/sideChkr.png')
+
+    def __init__(self):
+        super().__init__(Collide_Sprite)
+        self.image = SideChkr.scheck
+        self.rect = self.image.get_rect()
 
 
 if __name__ == '__main__':
@@ -204,6 +262,8 @@ if __name__ == '__main__':
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
     Collide_Sprite = pygame.sprite.Group()
+    Threat_Sprite = pygame.sprite.Group()
+
     UPDATER = pygame.USEREVENT + 1
     pygame.time.set_timer(UPDATER, 10)
     board = Board(10, 60)
@@ -226,6 +286,8 @@ if __name__ == '__main__':
                 camera.update(mario)
                 for spr in Ground_Sprites:
                     camera.apply(spr)
+                for spr in Threat_Sprite:
+                    camera.apply(spr)
         if keys[pygame.K_LEFT]:
             goingL = True
         else:
@@ -234,10 +296,16 @@ if __name__ == '__main__':
             goingR = True
         else:
             goingR = False
+
+        if mario.dead:
+            running = False
+            print('you died')
+
         walkingX = goingL or goingR
         screen.fill(sky_col)
         Ground_Sprites.draw(screen)
         Char_Sprite.draw(screen)
+        Threat_Sprite.draw(screen)
         pygame.display.flip()
 
     pygame.quit()
