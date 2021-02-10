@@ -9,8 +9,12 @@ stopping = 1
 goingL = False
 goingR = False
 walkingX = False
-
-
+mario_walkingR = ["Data/Sprites/mario_walking1.png",
+                  "Data/Sprites/mario_walking2.png", "Data/Sprites/mario_walking3.png"]
+mario_walkingL = ["Data/Sprites/mario_walking1L.png",
+                  "Data/Sprites/mario_walking2L.png", "Data/Sprites/mario_walking3L.png"]
+mario_jumpingR = ["Data/Sprites/mario_jumping1.png", "Data/Sprites/mario_jumping2.png"]
+mario_jumpingL = ["Data/Sprites/mario_jumping1L.png", "Data/Sprites/mario_jumping2L.png"]
 # BOARD Code
 
 
@@ -90,7 +94,7 @@ class Board:
 # MARIO Code
 
 class Mario(pygame.sprite.Sprite):
-    mario = pygame.image.load('Data/mario.png')
+    mario = pygame.image.load('Data/Sprites/mario_standing.png')
 
     def __init__(self, board):
         super().__init__(Char_Sprite)
@@ -330,7 +334,6 @@ if __name__ == '__main__':
             goingR = True
         else:
             goingR = False
-
         if mario.dead:
             running = False
             print('you died')
