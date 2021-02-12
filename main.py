@@ -15,7 +15,6 @@ won = 0
 lastLev = False
 level = 0
 
-
 # BOARD Code
 
 
@@ -481,7 +480,9 @@ if __name__ == '__main__':
     pygame.display.set_caption('Марио')
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
-
+    pygame.mixer.music.load('Data/Mario Theme.wav')
+    jump = pygame.mixer.Sound('Data/Jump_sound.mp3')
+    pygame.mixer.music.play()
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
     Collide_Sprite = pygame.sprite.Group()
@@ -508,6 +509,7 @@ if __name__ == '__main__':
                 walkingX = True
                 if event.key == pygame.K_UP:
                     mario.jump()
+                    jump.play()
             if event.type == UPDATER:
                 for elem in list_toUpdate:
                     elem.updater()
