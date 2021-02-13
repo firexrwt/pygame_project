@@ -1,4 +1,5 @@
 import pygame, math
+
 size = (1000, 520)
 sky_col = (200, 220, 255)
 running = True
@@ -13,7 +14,9 @@ nextMap = ''
 nextMrows, nextMcols = 0, 0
 won = 0
 lastLev = False
-level = 0
+level = 1
+ticks = 0
+
 
 # BOARD Code
 
@@ -27,8 +30,12 @@ class Board:
         self.col = col
         self.char_loc = ()
         self.charxy = (0, 0)
-        self.camera_checkpoint = 450
+        self.camera_checkpoint = 300
         self.end_camera_cp = self.col * 50 - 16 * 50
+
+        self.lBorder = WorldBorder()
+        self.rBorder = WorldBorder()
+
         for i in range(self.row):
             bListj = []
             for j in range(self.col):
@@ -125,6 +132,7 @@ class Mario(pygame.sprite.Sprite):
         global won
         super().__init__(Char_Sprite)
         self.camera_lock = False
+        self.killed = False
         self.jcounter = 0  # Можно менять кол-во прыжков
         self.image = Mario.mario
         self.rect = self.image.get_rect()
@@ -147,6 +155,9 @@ class Mario(pygame.sprite.Sprite):
         global walkingX
         global won
 
+        board.lBorder.rect.x = -50
+        board.rBorder.rect.x = 1005
+
         if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.gcheck,
                                                                                                    Ground_Sprites):
             self.rect.y -= 1
@@ -162,18 +173,19 @@ class Mario(pygame.sprite.Sprite):
 
         self.d += 1
         Char_Sprite.draw(screen)
-        print(self.xvelocity) #------------------------------------------------------------------------------------
 
         if self.d == 30:
             won = 0
-        self.lcheck.rect.x = self.rect.x - 2
-        self.lcheck.rect.y = self.rect.y + 10
-        self.rcheck.rect.x = self.rect.x + 26
-        self.rcheck.rect.y = self.rect.y + 10
-        self.gcheck.rect.x = self.rect.x
-        self.gcheck.rect.y = self.rect.y + 43
-        self.upcheck.rect.x = self.rect.x
-        self.upcheck.rect.y = self.rect.y - 3
+
+        if not self.killed:
+            self.lcheck.rect.x = self.rect.x - 2
+            self.lcheck.rect.y = self.rect.y + 10
+            self.rcheck.rect.x = self.rect.x + 26
+            self.rcheck.rect.y = self.rect.y + 10
+            self.gcheck.rect.x = self.rect.x
+            self.gcheck.rect.y = self.rect.y + 43
+            self.upcheck.rect.x = self.rect.x
+            self.upcheck.rect.y = self.rect.y - 3
 
         if pygame.sprite.spritecollideany(self.gcheck, Ground_Sprites):
             self.grounded = True
@@ -182,7 +194,7 @@ class Mario(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self.lcheck, Ground_Sprites):
             goingL = False
             self.xvelocity = 0
-        elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
+        if pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
             goingR = False
             self.xvelocity = 0
         if pygame.sprite.spritecollideany(self.upcheck, Ground_Sprites):
@@ -191,7 +203,7 @@ class Mario(pygame.sprite.Sprite):
                 if name != 'platform':
                     self.yvelocity = max(min(self.yvelocity, 0), -100000000000)
             except Exception:
-                self. yvelocity = max(min(self.yvelocity, 0), -100000000000)
+                self.yvelocity = max(min(self.yvelocity, 0), -100000000000)
 
         if pygame.sprite.spritecollideany(self.gcheck, Special_Sprites):
             try:
@@ -207,7 +219,7 @@ class Mario(pygame.sprite.Sprite):
                     self.won = True
             except Exception:
                 pass
-        elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
+        if pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
             try:
                 name = pygame.sprite.spritecollideany(self.lcheck, Special_Sprites).name
                 if name == 'end flag':
@@ -240,7 +252,7 @@ class Mario(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self.gcheck, Threat_Sprite).kill()
             except Exception:
                 self.dead = True
-        elif pygame.sprite.spritecollideany(self.rcheck, Threat_Sprite):
+        if pygame.sprite.spritecollideany(self.rcheck, Threat_Sprite):
             try:
                 name = pygame.sprite.spritecollideany(self.gcheck, Threat_Sprite).name
                 if name == 'goomba':
@@ -292,17 +304,14 @@ class Mario(pygame.sprite.Sprite):
                 else:
                     self.image = pygame.transform.flip(Mario.marioj, True, False)
 
-        if goingR or goingL:
+        if walkingX:
             if not self.camera_lock:
                 self.rect.x += self.xvelocity
-            board.camera_checkpoint -= self.xvelocity
-            if self.d % (2 ** level) == 0:
-                board.end_camera_cp -= self.xvelocity
             self.rect.y -= self.yvelocity
         else:
             self.rect.y -= self.yvelocity
 
-        if (board.end_camera_cp >= self.rect.x) and (self.rect.x >= board.camera_checkpoint):
+        if (board.texture_list[0][-1].rect.x >= 1005) and (self.rect.x >= 300):
             self.camera_lock = True
         else:
             self.camera_lock = False
@@ -320,13 +329,30 @@ class Mario(pygame.sprite.Sprite):
         self.rect.y -= 10
         if self.grounded:
             self.yvelocity = 7
+            jump.play()
         else:
             if self.jcounter > 0:
                 self.yvelocity = 5
             self.jcounter -= 1
 
+    def kill_ch(self):
+        self.killed = True
+        self.gcheck.rect.y -= 1000000000
+        self.lcheck.rect.y -= 1000000000
+        self.upcheck.rect.y -= 1000000000
+        self.rcheck.rect.y -= 1000000000
+
 
 # OTHER SPRITES' Code
+
+
+class WorldBorder(pygame.sprite.Sprite):
+    border = pygame.image.load('Data/world_borders.png')
+
+    def __init__(self):
+        super().__init__(Ground_Sprites)
+        self.image = WorldBorder.border
+        self.rect = self.image.get_rect()
 
 
 class Grass(pygame.sprite.Sprite):
@@ -482,6 +508,8 @@ if __name__ == '__main__':
     screen.fill(sky_col)
     pygame.mixer.music.load('Data/Mario Theme.wav')
     jump = pygame.mixer.Sound('Data/Jump_sound.mp3')
+    pygame.mixer.music.set_volume(0.05)
+    jump.set_volume(0.05)
     pygame.mixer.music.play()
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
@@ -501,6 +529,7 @@ if __name__ == '__main__':
     list_toUpdate.append(mario)
 
     while running:
+        ticks += 1
         keys = pygame.key.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -509,7 +538,6 @@ if __name__ == '__main__':
                 walkingX = True
                 if event.key == pygame.K_UP:
                     mario.jump()
-                    jump.play()
             if event.type == UPDATER:
                 for elem in list_toUpdate:
                     elem.updater()
@@ -534,6 +562,7 @@ if __name__ == '__main__':
                 if not lastLev:
                     won += 1
                     mario.kill()
+                    mario.kill_ch()
                     board.kill_all()
                     board = Board(nextMrows, nextMcols)
                     board.sort_map_text(f'Data/maps/{nextMap}')
@@ -551,10 +580,9 @@ if __name__ == '__main__':
             goingL = False
             goingR = True
         screen.fill(sky_col)
-        Ground_Sprites.draw(screen)
         Char_Sprite.draw(screen)
-        Threat_Sprite.draw(screen)
-        Special_Sprites.draw(screen)
+        for group in groupsList:
+            group.draw(screen)
         pygame.display.flip()
 
     pygame.quit()
