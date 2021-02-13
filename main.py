@@ -510,7 +510,7 @@ if __name__ == '__main__':
     jump = pygame.mixer.Sound('Data/Jump_sound.mp3')
     pygame.mixer.music.set_volume(0.05)
     jump.set_volume(0.05)
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(-1)
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
     Collide_Sprite = pygame.sprite.Group()
