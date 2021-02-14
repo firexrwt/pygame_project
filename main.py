@@ -10,12 +10,12 @@ goingL = False
 goingR = False
 walkingX = False
 list_toUpdate = []
-nextMap = ''
-nextMrows, nextMcols = 0, 0
+nextMap = 'map1.txt'
+nextMrows, nextMcols = 11, 60
 won = 0
 lastLev = False
 level = 1
-ticks = 0
+paused = False
 
 
 # BOARD Code
@@ -311,13 +311,20 @@ class Mario(pygame.sprite.Sprite):
         else:
             self.rect.y -= self.yvelocity
 
-        if (board.texture_list[0][-1].rect.x >= 1005) and (self.rect.x >= 300):
+        if (board.texture_list[0][-1].rect.x >= 1005) and (self.rect.x >= 300) and (board.texture_list[10][6].rect.x <= self.rect.x - 50):
             self.camera_lock = True
+        elif not (board.texture_list[10][6].rect.x <= self.rect.x - 50):
+            if self.camera_lock:
+                for gr in groupsList:
+                    for spr in gr:
+                        spr.rect.x -= 5
+            self.camera_lock = False
         else:
             self.camera_lock = False
 
         if self.rect.y > board.row * 50:
             self.dead = True
+
 
     def move(self, direction):
         if direction == 'r':
@@ -329,7 +336,7 @@ class Mario(pygame.sprite.Sprite):
         self.rect.y -= 10
         if self.grounded:
             self.yvelocity = 7
-            jump.play()
+            jumpSFX.play()
         else:
             if self.jcounter > 0:
                 self.yvelocity = 5
@@ -506,11 +513,15 @@ if __name__ == '__main__':
     pygame.display.set_caption('Марио')
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
+
     pygame.mixer.music.load('Data/Mario Theme.wav')
-    jump = pygame.mixer.Sound('Data/Jump_sound.mp3')
+    jumpSFX = pygame.mixer.Sound('Data/Jump_sound.mp3')
+    pauseSFX = pygame.mixer.Sound('Data/Pause_sound.mp3')
     pygame.mixer.music.set_volume(0.05)
-    jump.set_volume(0.05)
+    jumpSFX.set_volume(0.05)
+    pauseSFX.set_volume(0.1)
     pygame.mixer.music.play(-1)
+
     Ground_Sprites = pygame.sprite.Group()
     Char_Sprite = pygame.sprite.Group()
     Collide_Sprite = pygame.sprite.Group()
@@ -521,15 +532,15 @@ if __name__ == '__main__':
 
     UPDATER = pygame.USEREVENT + 1
     pygame.time.set_timer(UPDATER, 10)
-    board = Board(11, 60)
-    board.sort_map_text('Data/maps/map1.txt')
+    board = Board(nextMrows, nextMcols)
+    board.sort_map_text(f'Data/maps/{nextMap}')
     board.render_map()
     camera = Camera()
     mario = Mario(board)
     list_toUpdate.append(mario)
+    pause_pressed = False
 
     while running:
-        ticks += 1
         keys = pygame.key.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -537,14 +548,28 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN:
                 walkingX = True
                 if event.key == pygame.K_UP:
-                    mario.jump()
+                    if not paused:
+                        mario.jump()
+                if event.key == pygame.K_ESCAPE:
+                    pause_pressed = True
+                    if pause_pressed:
+                        if not paused:
+                            pygame.mixer.music.pause()
+                            pauseSFX.play()
+                        else:
+                            pygame.mixer.music.unpause()
+                        paused = not paused
+                else:
+                    pause_pressed = False
+
             if event.type == UPDATER:
-                for elem in list_toUpdate:
-                    elem.updater()
-                camera.updater(mario)
-                for group in groupsList:
-                    for sprite in group:
-                        camera.apply(sprite)
+                if not paused:
+                    for elem in list_toUpdate:
+                        elem.updater()
+                        camera.updater(mario)
+                    for group in groupsList:
+                        for sprite in group:
+                            camera.apply(sprite)
         if keys[pygame.K_LEFT]:
             goingL = True
         else:
@@ -553,7 +578,6 @@ if __name__ == '__main__':
             goingR = True
         else:
             goingR = False
-
         if mario.dead:
             running = False
             print('You Died!')
