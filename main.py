@@ -33,8 +33,8 @@ class Board:
         self.camera_checkpoint = 300
         self.end_camera_cp = self.col * 50 - 16 * 50
 
-        self.lBorder = WorldBorder()
-        self.rBorder = WorldBorder()
+        self.lBorder = WorldBorder('lb')
+        self.rBorder = WorldBorder('rb')
 
         for i in range(self.row):
             bListj = []
@@ -356,10 +356,11 @@ class Mario(pygame.sprite.Sprite):
 class WorldBorder(pygame.sprite.Sprite):
     border = pygame.image.load('Data/world_borders.png')
 
-    def __init__(self):
+    def __init__(self, name):
         super().__init__(Ground_Sprites)
         self.image = WorldBorder.border
         self.rect = self.image.get_rect()
+        self.name = name
 
 
 class Grass(pygame.sprite.Sprite):
@@ -471,18 +472,27 @@ class Enemy(pygame.sprite.Sprite):
         self.gcheck.rect.y = self.rect.y + 33
 
         if abs(self.rect.x - mario.rect.x) <= 1600:
+
             if pygame.sprite.spritecollideany(self, Ground_Sprites):
-                self.grounded = True
-                self.rect.y -= 1
+                name = self.get_col(self)
+                if name not in ['lb', 'rb']:
+                    self.grounded = True
+                    self.rect.y -= 1
             elif pygame.sprite.spritecollideany(self.gcheck, Ground_Sprites):
-                self.grounded = True
+                name = self.get_col(self.gcheck)
+                if name not in ['lb', 'rb']:
+                    self.grounded = True
             else:
                 self.grounded = False
 
             if pygame.sprite.spritecollideany(self.lcheck, Ground_Sprites):
-                self.xVel = 1
+                name = self.get_col(self.lcheck)
+                if name not in ['lb', 'rb']:
+                    self.xVel = 1
             elif pygame.sprite.spritecollideany(self.rcheck, Ground_Sprites):
-                self.xVel = -1
+                name = self.get_col(self.rcheck)
+                if name not in ['lb', 'rb']:
+                    self.xVel = -1
 
             if not self.grounded:
                 if self.d % 4 == 1:
@@ -503,6 +513,13 @@ class Enemy(pygame.sprite.Sprite):
                 self.kill()
             elif pygame.sprite.spritecollideany(self.rcheck, Char_Sprite) and (mario.yvelocity < 0):
                 self.kill()
+
+    def get_col(self, colsource):
+        try:
+            name = pygame.sprite.spritecollideany(colsource, Ground_Sprites).name
+        except Exception:
+            name = 'unknown'
+        return name
 
 
 # MAIN Code
