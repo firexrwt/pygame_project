@@ -155,7 +155,7 @@ class Mario(pygame.sprite.Sprite):
         global walkingX
         global won
 
-        board.lBorder.rect.x = -50
+        board.lBorder.rect.x = -55
         board.rBorder.rect.x = 1005
 
         if pygame.sprite.spritecollideany(self, Ground_Sprites) and pygame.sprite.spritecollideany(self.gcheck,
@@ -530,6 +530,8 @@ if __name__ == '__main__':
     pygame.display.set_caption('Марио')
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
+    clock = pygame.time.Clock()
+    clock.tick(60)
 
     pygame.mixer.music.load('Data/Mario Theme.wav')
     jumpSFX = pygame.mixer.Sound('Data/Jump_sound.mp3')
