@@ -12,10 +12,13 @@ walkingX = False
 list_toUpdate = []
 nextMap = 'map1.txt'
 nextMrows, nextMcols = 11, 60
+curMap = 'map1.txt'
+curMrows, curMcols = 11, 60
 won = 0
 lastLev = False
 level = 1
 paused = False
+lives = 3
 
 
 # BOARD Code
@@ -98,7 +101,6 @@ class Board:
                     mapEnd = EndFlag()
                     mapEnd.rect.x, mapEnd.rect.y = elem[0][0] + 5, elem[0][1]
                     tl1.append(mapEnd)
-                    print(1)
                 if elem[2] == 'G':
                     goomba = Enemy()
                     goomba.rect.x, goomba.rect.y = elem[0]
@@ -175,6 +177,8 @@ class Mario(pygame.sprite.Sprite):
         Char_Sprite.draw(screen)
 
         if self.d == 30:
+            if won != 0:
+                pygame.mixer.music.play()
             won = 0
 
         if not self.killed:
@@ -325,7 +329,6 @@ class Mario(pygame.sprite.Sprite):
         if self.rect.y > board.row * 50:
             self.dead = True
 
-
     def move(self, direction):
         if direction == 'r':
             self.xvelocity = 4
@@ -333,13 +336,14 @@ class Mario(pygame.sprite.Sprite):
             self.xvelocity = -4
 
     def jump(self):
-        self.rect.y -= 10
         if self.grounded:
-            self.yvelocity = 7
+            self.rect.y -= 10
+            self.yvelocity = 8
             jumpSFX.play()
         else:
             if self.jcounter > 0:
                 self.yvelocity = 5
+                jumpSFX.play()
             self.jcounter -= 1
 
     def kill_ch(self):
@@ -527,7 +531,8 @@ class Enemy(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption('Марио')
+    pygame.display.set_caption('Игра')
+    pygame.display.set_icon(pygame.image.load('Data/icon.png'))
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
     clock = pygame.time.Clock()
@@ -558,6 +563,7 @@ if __name__ == '__main__':
     mario = Mario(board)
     list_toUpdate.append(mario)
     pause_pressed = False
+    print(f'You have {lives} lives left')
 
     while running:
         keys = pygame.key.get_pressed()
@@ -598,15 +604,32 @@ if __name__ == '__main__':
         else:
             goingR = False
         if mario.dead:
-            running = False
-            print('You Died!')
+            lives -= 1
+            pygame.mixer.music.fadeout(20)
+            if lives == 0:
+                running = False
+                print('You Died!')
+            else:
+                print(f'You have {lives} lives left')
+                mario.kill()
+                mario.kill_ch()
+                board.kill_all()
+                board = Board(curMrows, curMcols)
+                board.sort_map_text(f'Data/maps/{curMap}')
+                board.render_map()
+                mario = Mario(board)
+                list_toUpdate.append(mario)
+                mario.rect.x, mario.rect.y = board.charxy
+                pygame.mixer.music.play()
         elif mario.won:
             if won == 0:
                 if not lastLev:
                     won += 1
+                    pygame.mixer.music.fadeout(20)
                     mario.kill()
                     mario.kill_ch()
                     board.kill_all()
+                    curMap, curMcols, curMrows = nextMap, nextMcols, nextMrows
                     board = Board(nextMrows, nextMcols)
                     board.sort_map_text(f'Data/maps/{nextMap}')
                     board.render_map()
