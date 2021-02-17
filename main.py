@@ -1,4 +1,4 @@
-import pygame, math
+import pygame, json
 
 size = (1000, 520)
 sky_col = (200, 220, 255)
@@ -19,6 +19,8 @@ lastLev = False
 level = 1
 paused = False
 lives = 3
+with open('Data/CustomSprites.json', 'r') as cs:
+    csdir = json.load(cs)
 
 
 # BOARD Code
@@ -74,40 +76,51 @@ class Board:
                     grass = Grass()
                     grass.rect.x, grass.rect.y = elem[0]
                     tl1.append(grass)
-                if elem[2] == '@':
+                elif elem[2] == '@':
                     self.char_loc = (i, j)
                     self.charxy = (self.bList[i][j][0][0] + 15, self.bList[i][j][0][1] + 5)
-                if elem[2] == '_':
+                elif elem[2] == '_':
                     platform = Platform()
                     platform.rect.x, platform.rect.y = elem[0]
                     tl1.append(platform)
-                if elem[2] == '^':
+                elif elem[2] == '^':
                     spike = Spike()
                     spike.rect.x, spike.rect.y = elem[0][0], elem[0][1] + 30
                     tl1.append(spike)
-                if elem[2] == '<':
+                elif elem[2] == '<':
                     spike = Spike('right')
                     spike.rect.x, spike.rect.y = elem[0][0] + 30, elem[0][1]
                     tl1.append(spike)
-                if elem[2] == '>':
+                elif elem[2] == '>':
                     spike = Spike('left')
                     spike.rect.x, spike.rect.y = elem[0]
                     tl1.append(spike)
-                if elem[2] == 'V':
+                elif elem[2] == 'V':
                     spike = Spike('top')
                     spike.rect.x, spike.rect.y = elem[0]
                     tl1.append(spike)
-                if elem[2] == 'F':
+                elif elem[2] == 'F':
                     mapEnd = EndFlag()
                     mapEnd.rect.x, mapEnd.rect.y = elem[0][0] + 5, elem[0][1]
                     tl1.append(mapEnd)
-                if elem[2] == 'G':
+                elif elem[2] == 'G':
                     goomba = Enemy()
                     goomba.rect.x, goomba.rect.y = elem[0]
                     goomba.rect.x += 20
                     goomba.rect.y += 20
                     tl1.append(goomba)
                     list_toUpdate.append(goomba)
+                else:
+                    if elem[2] in list(csdir.keys()):
+                        cc = CustomClass(csdir[elem[2]])
+                        cc.rect.x, cc.rect.y = elem[0]
+
+                        if cc.buffer:
+                            cc.rect.y -= cc.image.get_size()[1]
+                            cc.rect.y += 50
+                        if cc.xVel:
+                            list_toUpdate.append(cc)
+
             self.texture_list.append(tl1)
         Ground_Sprites.draw(screen)
         Special_Sprites.draw(screen)
@@ -449,6 +462,41 @@ class EndFlag(pygame.sprite.Sprite):
         self.name = 'end flag'
 
 
+class CustomClass(pygame.sprite.Sprite):
+    def __init__(self, list1):
+        if list1[0] == 'Ground':
+            super().__init__(Ground_Sprites)
+        elif list1[0] == 'Decor':
+            super().__init__(Decor_Sprites)
+        elif list1[0] == 'Threat':
+            super().__init__(Threat_Sprite)
+        self.image = pygame.image.load(list1[1])
+        self.rect = self.image.get_rect()
+        self.buffer = list1[4]
+        self.name = list1[3]
+        self.d = 0
+        self.xVel = list1[2]
+
+    def updater(self):
+        self.d += 1
+        self.d = self.d % 100
+
+        if self.xVel:
+            if abs(self.rect.x - mario.rect.x) <= 1600:
+                if pygame.sprite.spritecollideany(self, Ground_Sprites):
+                    name = self.get_col(self)
+                    if name not in ['lb', 'rb', 'mplatform']:
+                        self.xVel *= -1
+                self.rect.x += self.xVel
+
+    def get_col(self, colsource):
+        try:
+            name = pygame.sprite.spritecollideany(colsource, Ground_Sprites).name
+        except Exception:
+            name = 'unknown'
+        return name
+
+
 class Enemy(pygame.sprite.Sprite):
     goomba = pygame.image.load('Data/enemy.png')
 
@@ -551,7 +599,8 @@ if __name__ == '__main__':
     Collide_Sprite = pygame.sprite.Group()
     Threat_Sprite = pygame.sprite.Group()
     Special_Sprites = pygame.sprite.Group()
-    groupsList = [Ground_Sprites, Special_Sprites,
+    Decor_Sprites = pygame.sprite.Group()
+    groupsList = [Decor_Sprites, Ground_Sprites, Special_Sprites,
                   Threat_Sprite]
 
     UPDATER = pygame.USEREVENT + 1
@@ -646,9 +695,9 @@ if __name__ == '__main__':
             goingL = False
             goingR = True
         screen.fill(sky_col)
-        Char_Sprite.draw(screen)
         for group in groupsList:
             group.draw(screen)
+        Char_Sprite.draw(screen)
         pygame.display.flip()
 
     pygame.quit()
