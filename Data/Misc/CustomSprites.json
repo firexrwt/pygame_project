@@ -1,1 +1,1 @@
-{"-": ["Ground", "C:/Users/oyask/PycharmProjects/pgProject/Data/StSprites/platform.png", -1, "mplatform", false], "#": ["Ground", "Data/StSprites/grass.png", 0, "grass", false]}
+{"#": ["Ground", "Data/StSprites/grass.png", 0, "grass", false], "-": ["Ground", "Data/StSprites/platform.png", -1, "mplatform", false]}
