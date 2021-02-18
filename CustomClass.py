@@ -55,7 +55,8 @@ class CClass(QMainWindow):
             vel = int(self.Velocity.text())
         except Exception:
             vel = 0
-        csdir[symb] = [gr, self.im[0], vel, sprn, otstup]
+        self.im = '/'.join(self.im[0].split('/')[-3:])
+        csdir[symb] = [gr, self.im, vel, sprn, otstup]
         print(symb, csdir[symb])
         with open('Data/Misc/CustomSprites.json', 'w') as csfile:
             json.dump(csdir, csfile)
