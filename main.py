@@ -19,7 +19,7 @@ lastLev = False
 level = 1
 paused = False
 lives = 3
-with open('Data/CustomSprites.json', 'r') as cs:
+with open('Data/Misc/CustomSprites.json', 'r') as cs:
     csdir = json.load(cs)
 
 
@@ -72,11 +72,11 @@ class Board:
             tl1 = []
             for j in range(self.col):
                 elem = self.bList[i][j]
-                if elem[2] == '#':
-                    grass = Grass()
-                    grass.rect.x, grass.rect.y = elem[0]
-                    tl1.append(grass)
-                elif elem[2] == '@':
+                #if elem[2] == '#':
+                 #   grass = Grass()
+                  #  grass.rect.x, grass.rect.y = elem[0]
+                   # tl1.append(grass)
+                if elem[2] == '@':
                     self.char_loc = (i, j)
                     self.charxy = (self.bList[i][j][0][0] + 15, self.bList[i][j][0][1] + 5)
                 elif elem[2] == '_':
@@ -120,6 +120,7 @@ class Board:
                             cc.rect.y += 50
                         if cc.xVel:
                             list_toUpdate.append(cc)
+                        tl1.append(cc)
 
             self.texture_list.append(tl1)
         Ground_Sprites.draw(screen)
@@ -371,7 +372,7 @@ class Mario(pygame.sprite.Sprite):
 
 
 class WorldBorder(pygame.sprite.Sprite):
-    border = pygame.image.load('Data/world_borders.png')
+    border = pygame.image.load('Data/StSprites/world_borders.png')
 
     def __init__(self, name):
         super().__init__(Ground_Sprites)
@@ -381,7 +382,7 @@ class WorldBorder(pygame.sprite.Sprite):
 
 
 class Grass(pygame.sprite.Sprite):
-    grass = pygame.image.load('Data/grass.png')
+    grass = pygame.image.load('Data/StSprites/grass.png')
 
     def __init__(self):
         super().__init__(Ground_Sprites)
@@ -391,7 +392,7 @@ class Grass(pygame.sprite.Sprite):
 
 
 class Platform(pygame.sprite.Sprite):
-    platform = pygame.image.load('Data/platform.png')
+    platform = pygame.image.load('Data/StSprites/platform.png')
 
     def __init__(self):
         super().__init__(Ground_Sprites)
@@ -401,7 +402,7 @@ class Platform(pygame.sprite.Sprite):
 
 
 class GroundChkr(pygame.sprite.Sprite):
-    gcheck = pygame.image.load('Data/groundChkr.png')
+    gcheck = pygame.image.load('Data/StSprites/groundChkr.png')
 
     def __init__(self, xsmaller=0):
         super().__init__(Collide_Sprite)
@@ -410,7 +411,7 @@ class GroundChkr(pygame.sprite.Sprite):
 
 
 class Spike(pygame.sprite.Sprite):
-    spike = pygame.image.load('Data/spikes.png')
+    spike = pygame.image.load('Data/StSprites/spikes.png')
 
     def __init__(self, l='bottom'):
         super().__init__(Threat_Sprite)
@@ -444,7 +445,7 @@ class Camera:
 
 
 class SideChkr(pygame.sprite.Sprite):
-    scheck = pygame.image.load('Data/sideChkr.png')
+    scheck = pygame.image.load('Data/StSprites/sideChkr.png')
 
     def __init__(self, ysmaller=0):
         super().__init__(Collide_Sprite)
@@ -453,7 +454,7 @@ class SideChkr(pygame.sprite.Sprite):
 
 
 class EndFlag(pygame.sprite.Sprite):
-    flag = pygame.image.load('Data/end_flag.png')
+    flag = pygame.image.load('Data/StSprites/end_flag.png')
 
     def __init__(self):
         super().__init__(Special_Sprites)
@@ -482,10 +483,10 @@ class CustomClass(pygame.sprite.Sprite):
         self.d = self.d % 100
 
         if self.xVel:
-            if abs(self.rect.x - mario.rect.x) <= 1600:
+            if abs(self.rect.x - mario.rect.x) <= 2000:
                 if pygame.sprite.spritecollideany(self, Ground_Sprites):
                     name = self.get_col(self)
-                    if name not in ['lb', 'rb', 'mplatform']:
+                    if name not in ['lb', 'rb', self.name]:
                         self.xVel *= -1
                 self.rect.x += self.xVel
 
@@ -498,7 +499,7 @@ class CustomClass(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    goomba = pygame.image.load('Data/enemy.png')
+    goomba = pygame.image.load('Data/StSprites/enemy.png')
 
     def __init__(self):
         super().__init__(Threat_Sprite)
@@ -580,15 +581,15 @@ class Enemy(pygame.sprite.Sprite):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Игра')
-    pygame.display.set_icon(pygame.image.load('Data/icon.png'))
+    pygame.display.set_icon(pygame.image.load('Data/StSprites/icon.png'))
     screen = pygame.display.set_mode(size)
     screen.fill(sky_col)
     clock = pygame.time.Clock()
     clock.tick(60)
 
-    pygame.mixer.music.load('Data/Mario Theme.wav')
-    jumpSFX = pygame.mixer.Sound('Data/Jump_sound.mp3')
-    pauseSFX = pygame.mixer.Sound('Data/Pause_sound.mp3')
+    pygame.mixer.music.load('Data/Misc/Mario Theme.wav')
+    jumpSFX = pygame.mixer.Sound('Data/Misc/Jump_sound.mp3')
+    pauseSFX = pygame.mixer.Sound('Data/Misc/Pause_sound.mp3')
     pygame.mixer.music.set_volume(0.05)
     jumpSFX.set_volume(0.05)
     pauseSFX.set_volume(0.1)

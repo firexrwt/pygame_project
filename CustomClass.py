@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QInputDialog, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QInputDialog
 from PyQt5 import uic
 import json
 import pygame
 
-with open('Data/CustomSprites.json', 'r') as cs:
+with open('Data/Misc/CustomSprites.json', 'r') as cs:
     csdir = json.load(cs)
 
 Threat_Sprite = pygame.sprite.Group()
@@ -15,7 +15,7 @@ Decor_Sprites = pygame.sprite.Group()
 class CClass(QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi('Data/CustomClass.ui', self)
+        uic.loadUi('Data/Misc/CustomClass.ui', self)
         self.comboBox.addItem('Ground')
         self.comboBox.addItem('Threat')
         self.comboBox.addItem('Decor')
@@ -34,25 +34,30 @@ class CClass(QMainWindow):
     def delete(self):
 
         symb = QInputDialog.getText(self, 'Удаление', 'Введите Символ для удаления')
-        del csdir[symb[0]]
-        with open('Data/CustomSprites.json', 'w') as csfile:
-            json.dump(csdir, csfile)
+        try:
+            del csdir[symb[0]]
+            with open('Data/Misc/CustomSprites.json', 'w') as csfile:
+                json.dump(csdir, csfile)
+        except Exception:
+            print('Такого класса нет')
+
 
     def savespr(self):
         self.cbgroup = str(self.comboBox.currentText())
         symb = self.symbol.text()
         sprn = self.sprName.text()
         gr = self.cbgroup
-        otstup = False
-        if gr == 'Decor':
+        if gr != 'Ground':
             otstup = True
+        else:
+            otstup = False
         try:
             vel = int(self.Velocity.text())
         except Exception:
             vel = 0
         csdir[symb] = [gr, self.im[0], vel, sprn, otstup]
         print(symb, csdir[symb])
-        with open('Data/CustomSprites.json', 'w') as csfile:
+        with open('Data/Misc/CustomSprites.json', 'w') as csfile:
             json.dump(csdir, csfile)
 
 
