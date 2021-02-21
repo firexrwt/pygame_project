@@ -1,1 +1,1 @@
-{"#": ["Ground", "Data/StSprites/grass.png", 0, "grass", false], "-": ["Ground", "Data/StSprites/platform.png", -1, "mplatform", false]}
+{"#": ["Ground", "Data/StSprites/grass.png", 0, "grass", false], "-": ["Ground", "Data/StSprites/platform.png", -1, "mplatform", false], "W": ["Decor", "Data/StSprites/vtext.png", 0, "victory", true], "*": ["Decor", "Data/StSprites/confetti.png", 0, "confetti", false]}

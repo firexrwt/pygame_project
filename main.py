@@ -10,10 +10,10 @@ goingL = False
 goingR = False
 walkingX = False
 list_toUpdate = []
-nextMap = 'map1.txt'
-nextMrows, nextMcols = 11, 60
-curMap = 'map1.txt'
-curMrows, curMcols = 11, 60
+nextMap = 'map3.txt'
+nextMrows, nextMcols = 11, 95
+curMap = 'map3.txt'
+curMrows, curMcols = 11, 95
 won = 0
 lastLev = False
 level = 1
@@ -114,6 +114,8 @@ class Board:
                     if elem[2] in list(csdir.keys()):
                         cc = CustomClass(csdir[elem[2]])
                         cc.rect.x, cc.rect.y = elem[0]
+                        if elem[2] == 'W':
+                            print('rendered')
 
                         if cc.buffer:
                             cc.rect.y -= cc.image.get_size()[1]

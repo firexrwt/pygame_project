@@ -21,15 +21,20 @@ class CClass(QMainWindow):
         self.comboBox.addItem('Decor')
         self.cbgroup = 'Decor'
         self.symbol.maxLength()
+        self.otstup = False
         self.ui()
 
     def ui(self):
         self.add.clicked.connect(self.addSpr)
         self.delete_2.clicked.connect(self.delete)
         self.save.clicked.connect(self.savespr)
+        self.buffer.stateChanged.connect(self.changeBState)
 
     def addSpr(self):
         self.im = QFileDialog().getOpenFileName()
+
+    def changeBState(self):
+        self.otstup = not self.otstup
 
     def delete(self):
 
@@ -47,16 +52,12 @@ class CClass(QMainWindow):
         symb = self.symbol.text()
         sprn = self.sprName.text()
         gr = self.cbgroup
-        if gr != 'Ground':
-            otstup = True
-        else:
-            otstup = False
         try:
             vel = int(self.Velocity.text())
         except Exception:
             vel = 0
         self.im = '/'.join(self.im[0].split('/')[-3:])
-        csdir[symb] = [gr, self.im, vel, sprn, otstup]
+        csdir[symb] = [gr, self.im, vel, sprn, self.otstup]
         print(symb, csdir[symb])
         with open('Data/Misc/CustomSprites.json', 'w') as csfile:
             json.dump(csdir, csfile)
