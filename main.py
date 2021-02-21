@@ -72,10 +72,6 @@ class Board:
             tl1 = []
             for j in range(self.col):
                 elem = self.bList[i][j]
-                #if elem[2] == '#':
-                 #   grass = Grass()
-                  #  grass.rect.x, grass.rect.y = elem[0]
-                   # tl1.append(grass)
                 if elem[2] == '@':
                     self.char_loc = (i, j)
                     self.charxy = (self.bList[i][j][0][0] + 15, self.bList[i][j][0][1] + 5)
